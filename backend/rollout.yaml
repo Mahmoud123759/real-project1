@@ -25,27 +25,31 @@ spec:
             - name: http
               containerPort: 8080
           env:
-            - name: DB_HOST
+            - name: PG_HOST
               valueFrom:
                 secretKeyRef:
                   name: db-secret
                   key: host
-            - name: DB_PORT
+
+            - name: PG_PORT
               valueFrom:
                 secretKeyRef:
                   name: db-secret
                   key: port
-            - name: DB_NAME
+
+            - name: PG_DATABASE
               valueFrom:
                 secretKeyRef:
                   name: db-secret
                   key: dbname
-            - name: DB_USER
+
+            - name: PG_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: db-secret
                   key: username
-            - name: DB_PASSWORD
+
+            - name: PG_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: db-secret
