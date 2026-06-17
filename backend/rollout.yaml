@@ -44,10 +44,8 @@ spec:
                   key: dbname
 
             - name: PG_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: db-secret
-                  key: username
+              value: testdb
+
 
             - name: PG_PASSWORD
               valueFrom:
