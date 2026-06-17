@@ -16,7 +16,7 @@ spec:
   source:
     repoURL: https://github.com/Mahmoud123759/real-project1.git
     targetRevision: main
-    path: argocd-app
+    path: argocd-app/root-app
     directory:
       include: '{frontend-application.yaml,backend-application.yaml}'
   destination:
