@@ -13,6 +13,6 @@ spec:
     app: frontend   # Argo Rollouts patches this to point at the new (green) ReplicaSet
   ports:
     - name: http
-      port: 80
+      port: 8080
       targetPort: 3000
       protocol: TCP

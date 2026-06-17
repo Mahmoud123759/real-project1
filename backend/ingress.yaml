@@ -1,14 +1,26 @@
+# Backend Ingress — INTERNAL ALB only.
+# This ALB is reachable only from inside the VPC (frontend pods, bastion,
+# VPN), never from the internet. Same group.name pattern as frontend to
+# share one physical ALB across active (80) and preview (8080) listeners.
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: frontend
+  name: backend-ingress
   namespace: production
   annotations:
     kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/group.name: backend-alb
+    alb.ingress.kubernetes.io/group.order: '10'
+    alb.ingress.kubernetes.io/scheme: internal
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-    alb.ingress.kubernetes.io/load-balancer-attributes: '{"access_logs.s3.enabled":true,"access_logs.s3.bucket":"my-alb-logs-23496"}, "access_logs.s3.prefix":"alb-logs"}'
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/healthcheck-port: '3500'
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
+    alb.ingress.kubernetes.io/tags: Environment=production,Component=backend
 spec:
   ingressClassName: alb
   rules:
@@ -18,17 +30,34 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: frontend-active   # always points to active
+                name: backend-active
                 port:
                   number: 80
-  # If you want a separate preview host (internal only), add another rule:
-  
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backend-ingress-preview
+  namespace: production
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/group.name: backend-alb
+    alb.ingress.kubernetes.io/group.order: '20'
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":8080}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/healthcheck-port: '3500'
+    alb.ingress.kubernetes.io/tags: Environment=production,Component=backend-preview
+spec:
+  ingressClassName: alb
+  rules:
     - http:
-       paths:
-         - path: /
-           pathType: Prefix
-           backend:
-             service:
-               name: frontend-preview
-               port:
-                 number: 80
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-preview
+                port:
+                  number: 8080
