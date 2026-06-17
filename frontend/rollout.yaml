@@ -26,7 +26,7 @@ spec:
               containerPort: 3000
           env:
             - name: REACT_APP_BACKEND_URL
-              value: "http://backend:3500/api/tasks"
+              value: "http://backend-active:3500/api/tasks"
           readinessProbe:
             httpGet:
               path: /health
