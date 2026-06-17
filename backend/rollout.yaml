@@ -23,7 +23,7 @@ spec:
           image: 804136008051.dkr.ecr.us-east-1.amazonaws.com/backend:v1
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 3500
           env:
             - name: PG_HOST
               valueFrom:
