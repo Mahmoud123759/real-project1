@@ -1,0 +1,30 @@
+# App-of-Apps root. Point ArgoCD at THIS file (or this path in your repo)
+# and it will bootstrap the namespace + both child Applications.
+#
+# Apply once manually:
+#   kubectl apply -f root-application.yaml
+#
+# After that, everything below is managed declaratively through Git.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Mahmoud123759/real-project1.git
+    targetRevision: main
+    path: argocd-app
+    directory:
+      include: '{frontend-application.yaml,backend-application.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

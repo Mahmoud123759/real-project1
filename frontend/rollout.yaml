@@ -1,0 +1,77 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: frontend
+  namespace: production
+  labels:
+    app: frontend
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+
+  selector:
+    matchLabels:
+      app: frontend
+
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: 804136008051.dkr.ecr.us-east-1.amazonaws.com/frontend:v1
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: frontend-config
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+  strategy:
+    blueGreen:
+      activeService: frontend-active
+      previewService: frontend-preview
+
+      # Automated promotion gate: Argo Rollouts runs this AnalysisTemplate
+      # against the PREVIEW service as soon as green pods are ready.
+      prePromotionAnalysis:
+        templates:
+          - templateName: frontend-success-rate
+        args:
+          - name: service-name
+            value: frontend-preview
+
+      # After promotion, re-run analysis against the now-active service.
+      # If it fails, Rollouts automatically triggers rollback (abort).
+      postPromotionAnalysis:
+        templates:
+          - templateName: frontend-success-rate
+        args:
+          - name: service-name
+            value: frontend-active
+
+      autoPromotionEnabled: false   # promotion is gated by prePromotionAnalysis, not a human click
+      scaleDownDelaySeconds: 300    # keep old (blue) ReplicaSet alive 5 min after promotion for fast rollback
+      previewReplicaCount: 3
+      antiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution: {}

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-preview
+  namespace: production
+  labels:
+    app: frontend
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend   # Argo Rollouts patches this to point at the new (green) ReplicaSet
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP

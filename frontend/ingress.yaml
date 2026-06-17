@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend
+  namespace: production
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/group.name: frontend-alb
+    alb.ingress.kubernetes.io/group.order: '10'
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
+    alb.ingress.kubernetes.io/tags: Environment=production,Component=frontend
+    alb.ingress.kubernetes.io/load-balancer-attributes: '{"access_logs.s3.enabled":true,"access_logs.s3.bucket":"my-alb-logs-23496"}, "access_logs.s3.prefix":"alb-logs"}'
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-active   # always points to active
+                port:
+                  number: 80
+  # If you want a separate preview host (internal only), add another rule:
+  
+    - http:
+       paths:
+         - path: /
+           pathType: Prefix
+           backend:
+             service:
+               name: frontend-preview
+               port:
+                 number: 80
